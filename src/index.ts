@@ -25,13 +25,13 @@ class GitHubSecurityAutofixer {
     message: (msg?: string) => void;
   };
 
-  constructor() {
-    const token = process.env.GITHUB_TOKEN;
-    if (!token) {
+  constructor(token?: string) {
+    const githubToken = token || process.env.GITHUB_TOKEN;
+    if (!githubToken) {
       throw new Error('GITHUB_TOKEN environment variable is required');
     }
     this.octokit = new Octokit({
-      auth: token,
+      auth: githubToken,
       log: {
         error: () => { },
         warn: () => { },
@@ -94,8 +94,6 @@ class GitHubSecurityAutofixer {
   }
 
   async start(): Promise<void> {
-    clack.intro('🔒 GitHub Advanced Security Autofixer');
-
     try {
       await this.promptForRepository();
       const alerts = await this.fetchCodeScanningAlerts();
@@ -117,7 +115,7 @@ class GitHubSecurityAutofixer {
       const fixedAlerts = await this.processAutofixes(selectedAlerts);
       clack.outro(`🤖 Fixed ${fixedAlerts.length} code scanning alerts!`);
     } catch (error) {
-      clack.cancel(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
+      clack.cancel(this.getErrorMessage(error));
       process.exit(1);
     }
   }
@@ -227,7 +225,7 @@ class GitHubSecurityAutofixer {
       spinner.stop(`Found ${alerts.length} open code scanning alerts`);
       return alerts;
     } catch (error) {
-      spinner.stop(`Error fetching alerts: ${this.getErrorMessage(error)}`);
+      spinner.stop(`Failed to fetch alerts: ${this.getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -336,7 +334,7 @@ class GitHubSecurityAutofixer {
             result = `Autofix is outdated.`;
             break;
           } else {
-            result = `Autofix failed ${status.description}`;
+            result = `Autofix failed (${status.status}) ${status.description}`;
             break;
           }
           ++attempts;
@@ -346,6 +344,11 @@ class GitHubSecurityAutofixer {
       } finally {
         spinner.stop(`#${alert.number}: ${result}`);
       }
+    }
+
+    if (base) {
+      const href = `https://github.com/${this.org}/${this.repo}/compare/${base.target_ref}`;
+      clack.log.info(`🔗 Create a PR for fixes ${href}`);
     }
 
     return successfullyFixedAlerts;
@@ -393,7 +396,31 @@ class GitHubSecurityAutofixer {
 }
 
 async function main(): Promise<void> {
-  const autofixer = new GitHubSecurityAutofixer();
+  let token = process.env.GITHUB_TOKEN;
+  
+  if (!token) {
+    clack.intro('🔒 GitHub Advanced Security Autofixer');
+    
+    const tokenInput = await clack.password({
+      message: 'Enter your GitHub token:',
+      validate: (value) => {
+        if (value.length === 0) return 'GitHub token is required';
+        if (!value.startsWith('ghp_') && !value.startsWith('github_pat_')) {
+          return 'Token should start with ghp_ or github_pat_';
+        }
+        return undefined;
+      }
+    });
+
+    if (clack.isCancel(tokenInput)) {
+      clack.cancel('Operation cancelled');
+      process.exit(0);
+    }
+
+    token = tokenInput;
+  }
+
+  const autofixer = new GitHubSecurityAutofixer(token);
   await autofixer.start();
 }
 
