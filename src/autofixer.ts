@@ -1,5 +1,4 @@
 import * as clack from '@clack/prompts';
-import { writeFileSync } from 'fs';
 import type { CodeScanningAlert, CommitCodeScanningAutoFix } from './types.js';
 import { GitHubApiService } from './services/github-api.js';
 import { RepositoryPrompts } from './prompts/repository-prompts.js';
@@ -25,13 +24,29 @@ export class GitHubSecurityAutofixer {
       }
 
       const selectedAlerts = await RepositoryPrompts.promptForAlertSelection(alerts);
-
       if (selectedAlerts.length === 0) {
         throw new Error('No alerts selected.');
       }
 
-      const fixedAlerts = await this.processAutofixes(selectedAlerts);
-      clack.outro(`🤖 Fixed ${fixedAlerts.length} code scanning alerts!`);
+      const alertsByRepo = selectedAlerts.reduce((acc, alert) => {
+        const urlParts = alert.url.split('/');
+        const repoIndex = urlParts.findIndex(part => part === 'repos') + 2; // +2 to get past 'repos' and owner
+        const repoName = urlParts[repoIndex];
+        if (!acc[repoName]) acc[repoName] = [];
+        acc[repoName].push(alert);
+        return acc;
+      }, {} as Record<string, CodeScanningAlert[]>);
+
+      const totalFixedAlerts: CommitCodeScanningAutoFix['response']['data'][] = [];
+      for (const [repoName, alerts] of Object.entries(alertsByRepo)) {
+        clack.log.info(`🔍 Processing alerts for repository: ${repoName}`);
+        const fixedAlerts = await this.processAutofixes(alerts, repoName);
+        clack.log.info(`🤖 Fixed ${fixedAlerts.length} code scanning alerts in ${repoName}!`);
+        totalFixedAlerts.push(...fixedAlerts);
+      }
+
+      const repoCount = Object.keys(alertsByRepo).length;
+      clack.outro(`🎉 Fixed ${totalFixedAlerts.length} code scanning alerts ${repoCount > 1 ? `in ${repoCount} repositories!` : ''}`);
     } catch (error) {
       clack.cancel(ErrorHandler.getMessage(error));
       process.exit(1);
@@ -59,10 +74,10 @@ export class GitHubSecurityAutofixer {
     }
   }
 
-  private async processAutofixes(alerts: CodeScanningAlert[]): Promise<CommitCodeScanningAutoFix['response']['data'][]> {
+  private async processAutofixes(alerts: CodeScanningAlert[], repo=this.repo): Promise<CommitCodeScanningAutoFix['response']['data'][]> {
     clack.log.info(`🤖 Autofixing ${alerts.length} alert${alerts.length > 1 ? 's' : ''}...`);
 
-    const alertsWithAutoFixes = await this.createAutofixes(alerts);
+    const alertsWithAutoFixes = await this.createAutofixes(alerts, repo);
 
     if (alertsWithAutoFixes.length === 0) {
       return [];
@@ -75,22 +90,22 @@ export class GitHubSecurityAutofixer {
 
     const branchName = await RepositoryPrompts.promptForBranchName(
       'autofixes',
-      (name) => this.api.branchExists(this.org, this.repo, name)
+      (name) => this.api.branchExists(this.org, repo, name)
     );
 
-    await this.createBranch(branchName);
+    await this.createBranch(branchName, repo);
 
     const successfullyFixedAlerts = await this.commitAutofixes(alertsWithAutoFixes, branchName);
 
     if (successfullyFixedAlerts.length > 0) {
-      const href = `https://github.com/${this.org}/${this.repo}/compare/${branchName}`;
+      const href = `https://github.com/${this.org}/${repo}/compare/${branchName}`;
       clack.log.info(`🔗 Create a PR for fixes ${href}`);
     }
 
     return successfullyFixedAlerts;
   }
 
-  private async createAutofixes(alerts: CodeScanningAlert[]): Promise<CodeScanningAlert[]> {
+  private async createAutofixes(alerts: CodeScanningAlert[], repo=this.repo): Promise<CodeScanningAlert[]> {
     const alertsWithAutoFixes: CodeScanningAlert[] = [];
 
     for (const alert of alerts) {
@@ -99,7 +114,7 @@ export class GitHubSecurityAutofixer {
       spinner.start(`#${alert.number}: Creating autofix ${alert.rule.name}`);
 
       try {
-        await this.api.createAutofix(this.org, this.repo, alert);
+        await this.api.createAutofix(this.org, repo, alert);
         spinner.stop(`#${alert.number}: Autofix created`);
         alertsWithAutoFixes.push(alert);
       } catch (error) {
@@ -154,9 +169,9 @@ export class GitHubSecurityAutofixer {
     return successfullyFixedAlerts;
   }
 
-  private async createBranch(branchName: string): Promise<void> {
+  private async createBranch(branchName: string, repo=this.repo): Promise<void> {
     try {
-      await this.api.createBranch(this.org, this.repo, branchName);
+      await this.api.createBranch(this.org, repo, branchName);
       clack.log.info(`🌿 Created branch: ${branchName}`);
     } catch (error) {
       clack.log.warn(`⚠️ Could not create branch (might already exist): ${ErrorHandler.getMessage(error)}`);

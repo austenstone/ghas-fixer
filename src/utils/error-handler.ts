@@ -1,5 +1,5 @@
 import { RequestError } from '@octokit/request-error';
-
+import * as clack from '@clack/prompts';
 export class ErrorHandler {
   static getMessage(error: unknown): string {
     if (error instanceof RequestError) {
@@ -25,7 +25,7 @@ export class ErrorHandler {
   }
 
   static createSpinnerTimerMessage(
-    spinner: { message: (msg?: string) => void } | undefined,
+    spinner: ReturnType<typeof clack.spinner> | undefined,
     retryAfter: number,
     message: string
   ): void {
