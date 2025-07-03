@@ -98,8 +98,7 @@ export class GitHubSecurityAutofixer {
     const successfullyFixedAlerts = await this.commitAutofixes(alertsWithAutoFixes, branchName);
 
     if (successfullyFixedAlerts.length > 0) {
-      const href = `https://github.com/${this.org}/${repo}/compare/${branchName}`;
-      clack.log.info(`🔗 Create a PR for fixes ${href}`);
+      await this.handlePullRequestCreation(alertsWithAutoFixes, branchName, repo);
     }
 
     return successfullyFixedAlerts;
@@ -150,6 +149,7 @@ export class GitHubSecurityAutofixer {
           const commit = await this.api.commitAutofix(this.org, this.repo, alert);
           result = `Autofix committed (${commit.target_ref})`;
 
+          spinner.message(`Merging autofix`);
           if (commit.target_ref && commit.sha) {
             await this.api.mergeBranch(this.org, this.repo, branchName, commit.target_ref);
           }
@@ -175,6 +175,30 @@ export class GitHubSecurityAutofixer {
       clack.log.info(`🌿 Created branch: ${branchName}`);
     } catch (error) {
       clack.log.warn(`⚠️ Could not create branch (might already exist): ${ErrorHandler.getMessage(error)}`);
+    }
+  }
+
+  private async handlePullRequestCreation(successfullyFixedAlerts: CodeScanningAlert[], branchName: string, repo: string = this.repo): Promise<void> {
+    const shouldCreatePr = await RepositoryPrompts.confirmPullRequestCreation(successfullyFixedAlerts.length);
+
+    if (shouldCreatePr) {
+      const { title, body } = await RepositoryPrompts.promptForPullRequestDetails(successfullyFixedAlerts);
+
+      const spinner = clack.spinner();
+      spinner.start('🔄 Creating pull request...');
+      
+      try {
+        const pr = await this.api.createPullRequest(this.org, repo, title, body, branchName);
+        spinner.stop(`✅ Pull request created successfully!`);
+        clack.log.info(`🔗 View your PR: ${pr.html_url}`);
+      } catch (error) {
+        spinner.stop(`❌ Failed to create pull request: ${ErrorHandler.getMessage(error)}`);
+        const compareUrl = `https://github.com/${this.org}/${repo}/compare/${branchName}`;
+        clack.log.info(`🔗 Create a PR manually: ${compareUrl}`);
+      }
+    } else {
+      const compareUrl = `https://github.com/${this.org}/${repo}/compare/${branchName}`;
+      clack.log.info(`🔗 Create a PR for fixes: ${compareUrl}`);
     }
   }
 }

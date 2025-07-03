@@ -171,4 +171,27 @@ export class GitHubApiService {
       head: headBranch
     });
   }
+
+  async createPullRequest(
+    org: string, 
+    repo: string, 
+    title: string, 
+    body: string, 
+    headBranch: string, 
+    baseBranch: string = 'main'
+  ): Promise<{ number: number; html_url: string }> {
+    const { data } = await this.octokit.rest.pulls.create({
+      owner: org,
+      repo: repo,
+      title: title,
+      body: body,
+      head: headBranch,
+      base: baseBranch
+    });
+    
+    return {
+      number: data.number,
+      html_url: data.html_url
+    };
+  }
 }

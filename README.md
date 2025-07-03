@@ -14,7 +14,7 @@ A powerful CLI tool that automatically fixes code scanning alerts in your GitHub
 ## Installation 📦
 
 ```bash
-npm install -g gha-secret-fixer
+npm install -g ghas-secret-fixer
 ```
 
 ## Usage 🚀
@@ -33,7 +33,7 @@ npm install -g gha-secret-fixer
 ### Running the Tool
 
 ```bash
-gha-secret-fixer
+ghas-secret-fixer
 ```
 
 The tool will guide you through:
@@ -47,10 +47,10 @@ The tool will guide you through:
 
 ```bash
 # Specify repository directly
-gha-secret-fixer <owner/repo>
+ghas-secret-fixer <owner/repo>
 
 # Example
-gha-secret-fixer microsoft/vscode
+ghas-secret-fixer microsoft/vscode
 ```
 
 ## Development 🔨
