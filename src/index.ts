@@ -297,7 +297,31 @@ class GitHubSecurityAutofixer {
       return successfullyFixedAlerts;
     }
 
-    let base: CommitCodeScanningAutoFix["response"]["data"] | undefined = undefined;
+    const branchName = await clack.text({
+      message: 'Enter branch name for autofixes:',
+      placeholder: 'autofixes',
+      defaultValue: 'autofixes',
+      validate: (value) => {
+        if (value.length === 0) return 'Branch name is required';
+        // Basic branch name validation
+        if (!/^[a-zA-Z0-9._/-]+$/.test(value)) {
+          return 'Branch name contains invalid characters';
+        }
+        return undefined;
+      }
+    });
+
+    if (clack.isCancel(branchName)) {
+      clack.cancel('Operation cancelled');
+      process.exit(0);
+    }
+
+    try {
+      await this.createBranch(branchName);
+      clack.log.info(`🌿 Created branch: ${branchName}`);
+    } catch (error) {
+      clack.log.warn(`⚠️ Could not create branch (might already exist): ${this.getErrorMessage(error)}`);
+    }
 
     for (const [, alert] of alertsWithAutoFixes.entries()) {
       let result = `Waiting for autofix ${alert.rule.name}`;
@@ -315,16 +339,12 @@ class GitHubSecurityAutofixer {
             const commit = await this.commitAutofix(alert);
             result = `Autofix committed (${commit.target_ref})`;
             if (commit.target_ref && commit.sha) {
-              if (!base || !base.target_ref) {
-                base = commit;
-              } else {
-                await this.octokit.rest.repos.merge({
-                  owner: this.org,
-                  repo: this.repo,
-                  base: base.target_ref, // or the default branch of your repo
-                  head: commit.target_ref
-                });
-              }
+              await this.octokit.rest.repos.merge({
+                owner: this.org,
+                repo: this.repo,
+                base: branchName,
+                head: commit.target_ref
+              });
             }
             successfullyFixedAlerts.push(commit);
           } else if (status.status === 'pending') {
@@ -346,8 +366,8 @@ class GitHubSecurityAutofixer {
       }
     }
 
-    if (base) {
-      const href = `https://github.com/${this.org}/${this.repo}/compare/${base.target_ref}`;
+    if (successfullyFixedAlerts.length > 0) {
+      const href = `https://github.com/${this.org}/${this.repo}/compare/${branchName}`;
       clack.log.info(`🔗 Create a PR for fixes ${href}`);
     }
 
@@ -393,14 +413,37 @@ class GitHubSecurityAutofixer {
     return response.data;
   }
 
+  private async createBranch(branchName: string): Promise<void> {
+    // Get the default branch
+    const { data: repo } = await this.octokit.rest.repos.get({
+      owner: this.org,
+      repo: this.repo
+    });
+
+    // Get the latest commit from the default branch
+    const { data: ref } = await this.octokit.rest.git.getRef({
+      owner: this.org,
+      repo: this.repo,
+      ref: `heads/${repo.default_branch}`
+    });
+
+    // Create the new branch
+    await this.octokit.rest.git.createRef({
+      owner: this.org,
+      repo: this.repo,
+      ref: `refs/heads/${branchName}`,
+      sha: ref.object.sha
+    });
+  }
+
 }
 
 async function main(): Promise<void> {
   let token = process.env.GITHUB_TOKEN;
-  
+
   if (!token) {
     clack.intro('🔒 GitHub Advanced Security Autofixer');
-    
+
     const tokenInput = await clack.password({
       message: 'Enter your GitHub token:',
       validate: (value) => {
