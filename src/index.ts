@@ -202,20 +202,31 @@ class GitHubSecurityAutofixer {
           repo: this.repo,
           state: 'open',
           tool_name: 'CodeQL',
-          per_page: 100
         };
-        const response = await this.octokit.request('GET /repos/{owner}/{repo}/code-scanning/alerts', params);
-        alerts = response.data;
+        // const response = await this.octokit.paginate('GET /repos/{owner}/{repo}/code-scanning/alerts', params);
+        for await (const response of this.octokit.paginate.iterator(
+          'GET /repos/{owner}/{repo}/code-scanning/alerts',
+          params,
+        )) {
+          // do whatever you want with each response, break out of the loop, etc.
+          alerts.push(...response.data);
+          spinner.message(`🔍 Found ${alerts.length} code scanning alerts...`);
+        }
       } else {
         // Fetch alerts for organization
         const params: ListOrgCodeScanningAlerts['parameters'] = {
           org: this.org,
           state: 'open',
           tool_name: 'CodeQL',
-          per_page: 100
         };
-        const response = await this.octokit.request('GET /orgs/{org}/code-scanning/alerts', params);
-        alerts = response.data;
+        for await (const response of this.octokit.paginate.iterator(
+          'GET /orgs/{org}/code-scanning/alerts',
+          params,
+        )) {
+          // do whatever you want with each response, break out of the loop, etc.
+          alerts.push(...response.data);
+          spinner.message(`🔍 Found ${alerts.length} code scanning alerts...`);
+        }
       }
 
       alerts.sort((a, b) => {
@@ -297,19 +308,28 @@ class GitHubSecurityAutofixer {
       return successfullyFixedAlerts;
     }
 
-    const branchName = await clack.text({
-      message: 'Enter branch name for autofixes:',
-      placeholder: 'autofixes',
-      defaultValue: 'autofixes',
-      validate: (value) => {
-        if (value.length === 0) return 'Branch name is required';
-        // Basic branch name validation
-        if (!/^[a-zA-Z0-9._/-]+$/.test(value)) {
-          return 'Branch name contains invalid characters';
+    let branchName = 'autofixes';
+    let branchValid = false;
+    do {
+      branchName = await clack.text({
+        message: 'Enter branch name for autofixes:',
+        placeholder: 'autofixes',
+        defaultValue: 'autofixes',
+        validate: (value) => {
+          if (value.length === 0) return undefined;
+          // Basic branch name validation
+          if (!/^[a-zA-Z0-9._/-]+$/.test(value)) {
+            return 'Branch name contains invalid characters';
+          }
+          return undefined;
         }
-        return undefined;
+      }) as string;
+      if (await this.branchExists(branchName)) {
+        clack.log.warn(`⚠️ Branch already exists: ${branchName}`);
+      } else {
+        branchValid = true;
       }
-    });
+    } while (!branchValid);
 
     if (clack.isCancel(branchName)) {
       clack.cancel('Operation cancelled');
@@ -434,6 +454,19 @@ class GitHubSecurityAutofixer {
       ref: `refs/heads/${branchName}`,
       sha: ref.object.sha
     });
+  }
+
+  private async branchExists(branchName: string): Promise<boolean> {
+    try {
+      await this.octokit.rest.git.getRef({
+        owner: this.org,
+        repo: this.repo,
+        ref: `heads/${branchName}`
+      });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
 }
