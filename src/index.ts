@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import 'dotenv/config';
-import { Octokit } from '@octokit/rest';
+import { Octokit } from "octokit";
 import * as clack from '@clack/prompts';
 import type { Endpoints } from '@octokit/types';
 import type { components } from '@octokit/openapi-types';
@@ -19,28 +19,55 @@ class GitHubSecurityAutofixer {
   private octokit: Octokit;
   private org: string = '';
   private repo: string = '';
+  private spinner?: {
+    start: (msg?: string) => void;
+    stop: (msg?: string, code?: number) => void;
+    message: (msg?: string) => void;
+  };
 
   constructor() {
     const token = process.env.GITHUB_TOKEN;
     if (!token) {
       throw new Error('GITHUB_TOKEN environment variable is required');
     }
-    this.octokit = new Octokit({ 
+    this.octokit = new Octokit({
       auth: token,
       log: {
-        error: () => {
-          // clack.log.error(`GitHub API Error: ${message}`);
+        error: () => { },
+        warn: () => { },
+        info: () => { },
+        debug: () => { },
+      },
+      throttle: {
+        onRateLimit: (retryAfter, _options, _octokit, retryCount) => {
+          if (retryCount < 1) {
+            this.spinnerTimerMessage(retryAfter, 'Rate limit hit!');
+            return true;
+          }
+          return false;
         },
-        warn: () => {
-          // clack.log.warn(`GitHub API Warning: ${message}`);
+        onSecondaryRateLimit: (retryAfter, options) => {
+          clack.log.error(`SecondaryRateLimit detected for request ${options.method} ${options.url}, retryAfter: ${retryAfter}`);
+          // this.spinnerTimerMessage(retryAfter, `SecondaryRateLimit detected for request ${options.method} ${options.url}`);
+          return false; // do not retry again
         },
-        info: () => {
-          // clack.log.info(`GitHub API Info: ${message}`);
-        },
-        debug: () => {
-        }
       }
-     });
+    });
+  }
+
+  private spinnerTimerMessage(retryAfter: number, message: string): void {
+    if (this.spinner) {
+      this.spinner.message(`${message} Retrying after ${retryAfter} seconds`);
+      let remainingTime = retryAfter;
+      const interval = setInterval(() => {
+        remainingTime -= 1;
+        if (remainingTime <= 0) {
+          clearInterval(interval);
+        } else {
+          this.spinner?.message(`${message} Retrying in ${remainingTime} seconds`);
+        }
+      }, 1000);
+    }
   }
 
   private getErrorMessage(error: unknown): string {
@@ -164,6 +191,7 @@ class GitHubSecurityAutofixer {
 
   private async fetchCodeScanningAlerts(): Promise<CodeScanningAlert[]> {
     const spinner = clack.spinner();
+    this.spinner = spinner;
     spinner.start('🔍 Fetching code scanning alerts...');
 
     try {
@@ -243,6 +271,7 @@ class GitHubSecurityAutofixer {
     const alertsWithAutoFixes: CodeScanningAlert[] = [];
     for (const [, alert] of alerts.entries()) {
       const spinner = clack.spinner();
+      this.spinner = spinner;
       spinner.start(`#${alert.number}: Creating autofix ${alert.rule.name}`);
       try {
         await this.createAutofix(alert);
@@ -273,9 +302,10 @@ class GitHubSecurityAutofixer {
     let base: CommitCodeScanningAutoFix["response"]["data"] | undefined = undefined;
 
     for (const [, alert] of alertsWithAutoFixes.entries()) {
-      let result = `#${alert.number}: Waiting for autofix ${alert.rule.name}`;
+      let result = `Waiting for autofix ${alert.rule.name}`;
       const spinner = clack.spinner();
       spinner.start(result);
+      this.spinner = spinner;
 
       try {
         let status: GetStatusCodeScanningAutoFix['response']['data'];
@@ -283,9 +313,9 @@ class GitHubSecurityAutofixer {
         do {
           status = await this.getAutofixStatus(alert);
           if (status.status === 'success') {
-            spinner.message(`#${alert.number}: Committing autofix`);
+            spinner.message(`Committing autofix`);
             const commit = await this.commitAutofix(alert);
-            result = `#${alert.number}: Autofix committed (${commit.target_ref})`;
+            result = `Autofix committed (${commit.target_ref})`;
             if (commit.target_ref && commit.sha) {
               if (!base || !base.target_ref) {
                 base = commit;
@@ -300,19 +330,19 @@ class GitHubSecurityAutofixer {
             }
             successfullyFixedAlerts.push(commit);
           } else if (status.status === 'pending') {
-            spinner.message(`#${alert.number}: ⏳ Autofix is still pending.`);
+            spinner.message(`⏳ Autofix is still pending.`);
             await new Promise(resolve => setTimeout(resolve, 1000));
           } else if (status.status === 'outdated') {
-            result = `#${alert.number}: Autofix is outdated.`;
+            result = `Autofix is outdated.`;
             break;
           } else {
-            result = `#${alert.number}: Autofix failed ${status.description}`;
+            result = `Autofix failed ${status.description}`;
             break;
           }
           ++attempts;
         } while (status.status === 'pending' && attempts < 60);
       } catch (error) {
-        result = `Failed to commit autofix for #${alert.number}: ${this.getErrorMessage(error)}`;
+        result = `Failed to commit autofix - ${this.getErrorMessage(error)}`;
       } finally {
         spinner.stop(`#${alert.number}: ${result}`);
       }
