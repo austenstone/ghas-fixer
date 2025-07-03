@@ -8,6 +8,7 @@ export class GitHubSecurityAutofixer {
   private api: GitHubApiService;
   private org: string = '';
   private repo: string = '';
+  private selectedRepos: string[] = [];
 
   constructor(token: string) {
     this.api = new GitHubApiService(token);
@@ -57,20 +58,74 @@ export class GitHubSecurityAutofixer {
     const { org, repo } = await RepositoryPrompts.promptForRepository(process.argv);
     this.org = org;
     this.repo = repo;
+
+    // If no specific repo was selected, prompt for repository selection
+    if (!repo) {
+      const spinner = clack.spinner();
+      this.api.setSpinner(spinner);
+      spinner.start('📦 Fetching organization repositories...');
+
+      try {
+        const repositories = await this.api.fetchOrganizationRepositories(this.org);
+        spinner.stop(`Found ${repositories.length} repositories in ${this.org}`);
+        
+        if (repositories.length === 0) {
+          throw new Error(`No repositories found in organization: ${this.org}`);
+        }
+
+        const selectedRepositories = await RepositoryPrompts.promptForRepositorySelection(repositories);
+        this.selectedRepos = selectedRepositories.map(repo => repo.name);
+        
+        clack.log.info(`🎯 Selected ${this.selectedRepos.length} repositories for scanning`);
+      } catch (error) {
+        spinner.stop(`Failed to fetch repositories: ${ErrorHandler.getMessage(error)}`);
+        throw error;
+      }
+    }
   }
 
   private async fetchCodeScanningAlerts(): Promise<CodeScanningAlert[]> {
     const spinner = clack.spinner();
     this.api.setSpinner(spinner);
-    spinner.start('🔍 Fetching code scanning alerts...');
-
-    try {
-      const alerts = await this.api.fetchCodeScanningAlerts(this.org, this.repo);
-      spinner.stop(`Found ${alerts.length} open code scanning alerts`);
-      return alerts;
-    } catch (error) {
-      spinner.stop(`Failed to fetch alerts: ${ErrorHandler.getMessage(error)}`);
-      throw error;
+    
+    if (this.repo) {
+      // Single repository mode
+      spinner.start('🔍 Fetching code scanning alerts...');
+      try {
+        const alerts = await this.api.fetchCodeScanningAlerts(this.org, this.repo);
+        spinner.stop(`Found ${alerts.length} open code scanning alerts`);
+        return alerts;
+      } catch (error) {
+        spinner.stop(`Failed to fetch alerts: ${ErrorHandler.getMessage(error)}`);
+        throw error;
+      }
+    } else {
+      // Organization mode - fetch alerts for selected repositories
+      spinner.start('🔍 Fetching code scanning alerts from selected repositories...');
+      
+      try {
+        const allAlerts: CodeScanningAlert[] = [];
+        let totalProcessed = 0;
+        
+        for (const repoName of this.selectedRepos) {
+          totalProcessed++;
+          spinner.message(`🔍 Scanning ${repoName} (${totalProcessed}/${this.selectedRepos.length})`);
+          
+          try {
+            const alerts = await this.api.fetchCodeScanningAlerts(this.org, repoName);
+            allAlerts.push(...alerts);
+            clack.log.info(`📦 ${repoName}: Found ${alerts.length} alerts`);
+          } catch (error) {
+            clack.log.warn(`⚠️ ${repoName}: Failed to fetch alerts - ${ErrorHandler.getMessage(error)}`);
+          }
+        }
+        
+        spinner.stop(`Found ${allAlerts.length} total open code scanning alerts across ${this.selectedRepos.length} repositories`);
+        return allAlerts;
+      } catch (error) {
+        spinner.stop(`Failed to fetch alerts: ${ErrorHandler.getMessage(error)}`);
+        throw error;
+      }
     }
   }
 
@@ -140,18 +195,34 @@ export class GitHubSecurityAutofixer {
         while (status.status === 'pending' && attempts < 60) {
           spinner.message(`⏳ Autofix is still pending.`);
           await new Promise(resolve => setTimeout(resolve, 1000));
-          status = await this.api.getAutofixStatus(this.org, this.repo, alert);
+          try {
+            status = await this.api.getAutofixStatus(this.org, this.repo, alert);
+          } catch (error) {
+            clack.log.warn(`⚠️ Error checking autofix status: ${ErrorHandler.getMessage(error)}`);
+            throw error;
+          }
           attempts++;
         }
 
         if (status.status === 'success') {
           spinner.message(`Committing autofix`);
-          const commit = await this.api.commitAutofix(this.org, this.repo, alert);
+          let commit: CommitCodeScanningAutoFix['response']['data'];
+          try {
+            commit = await this.api.commitAutofix(this.org, this.repo, alert);
+          } catch (error) {
+            clack.log.warn(`⚠️ Failed to commit autofix: ${ErrorHandler.getMessage(error)}`);
+            throw error;
+          }
           result = `Autofix committed (${commit.target_ref})`;
 
           spinner.message(`Merging autofix`);
           if (commit.target_ref && commit.sha) {
-            await this.api.mergeBranch(this.org, this.repo, branchName, commit.target_ref);
+            try {
+              await this.api.mergeBranch(this.org, this.repo, branchName, commit.target_ref);
+            } catch (error) {
+              clack.log.warn(`⚠️ Failed to merge autofix: ${ErrorHandler.getMessage(error)}`);
+              throw error;
+            }
           }
           successfullyFixedAlerts.push(commit);
         } else if (status.status === 'outdated') {

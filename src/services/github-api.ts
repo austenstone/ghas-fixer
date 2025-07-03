@@ -7,7 +7,8 @@ import type {
   CreateCodeScanningAutoFix,
   CommitCodeScanningAutoFix,
   GetStatusCodeScanningAutoFix,
-  SpinnerInterface
+  SpinnerInterface,
+  Repository
 } from '../types.js';
 import { ErrorHandler } from '../utils/error-handler.js';
 
@@ -193,5 +194,25 @@ export class GitHubApiService {
       number: data.number,
       html_url: data.html_url
     };
+  }
+
+  async fetchOrganizationRepositories(org: string): Promise<Repository[]> {
+    const repos: Repository[] = [];
+
+    for await (const response of this.octokit.paginate.iterator(
+      'GET /orgs/{org}/repos',
+      {
+        org: org,
+        type: 'all',
+        sort: 'updated',
+        direction: 'desc',
+        per_page: 100
+      }
+    )) {
+      repos.push(...response.data);
+      this.spinner?.message(`📦 Found ${repos.length} repositories...`);
+    }
+
+    return repos;
   }
 }

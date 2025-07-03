@@ -9,6 +9,7 @@ A powerful CLI tool that automatically fixes code scanning alerts in your GitHub
 - 📋 Interactive prompts for selecting alerts to fix
 - 🌿 Creates a new branch with all the fixes applied
 - 🔄 Supports both single repositories and organization-wide scanning
+- 🏢 Organization mode: Select multiple repositories to scan at once
 - 🛡️ Handles errors gracefully with detailed feedback
 
 ## Installation 📦
@@ -49,9 +50,24 @@ The tool will guide you through:
 # Specify repository directly
 ghas-secret-fixer <owner/repo>
 
+# Specify organization (will prompt for repository selection)
+ghas-secret-fixer <organization>
+
 # Example
 ghas-secret-fixer microsoft/vscode
+
+# Organization example
+ghas-secret-fixer github
 ```
+
+### Organization Mode 🏢
+
+When you select organization mode, the tool will:
+1. 📦 Fetch all repositories in the organization
+2. 🎯 Let you select which repositories to scan
+3. 🔍 Aggregate code scanning alerts from all selected repositories
+4. 📋 Display alerts with repository context
+5. 🤖 Process fixes for each repository individually
 
 ## Development 🔨
 

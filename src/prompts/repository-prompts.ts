@@ -1,5 +1,5 @@
 import * as clack from '@clack/prompts';
-import type { CodeScanningAlert } from '../types.js';
+import type { CodeScanningAlert, Repository } from '../types.js';
 import { ErrorHandler } from '../utils/error-handler.js';
 
 export class RepositoryPrompts {
@@ -78,11 +78,18 @@ export class RepositoryPrompts {
         label: `🎯 Select all alerts (${alerts.length} alerts)`,
         hint: 'Fix all available alerts'
       },
-      ...alerts.map((alert) => ({
-        value: alert.number.toString(),
-        label: `${ErrorHandler.getSecuritySeverityEmoji(alert.rule.security_severity_level)} ${alert.rule.description || alert.rule.name || alert.rule.id} #${alert.number.toString().padEnd(3, ' ')}`,
-        hint: `${alert.most_recent_instance?.location ? `${alert.most_recent_instance.location.path}:${alert.most_recent_instance.location.start_line}` : 'No location available'}`
-      }))
+      ...alerts.map((alert) => {
+        // Extract repository name from the alert URL
+        const urlParts = alert.url.split('/');
+        const repoIndex = urlParts.findIndex(part => part === 'repos') + 2;
+        const repoName = urlParts[repoIndex];
+        
+        return {
+          value: alert.number.toString(),
+          label: `${ErrorHandler.getSecuritySeverityEmoji(alert.rule.security_severity_level)} ${alert.rule.description || alert.rule.name || alert.rule.id} #${alert.number.toString().padEnd(3, ' ')}`,
+          hint: `[${repoName}] ${alert.most_recent_instance?.location ? `${alert.most_recent_instance.location.path}:${alert.most_recent_instance.location.start_line}` : 'No location available'}`
+        };
+      })
     ];
 
     const selected = await clack.multiselect({
@@ -216,5 +223,39 @@ Please review the changes before merging.`;
     }
 
     return { title, body };
+  }
+
+  static async promptForRepositorySelection(repositories: Repository[]): Promise<Repository[]> {
+    const options = [
+      {
+        value: 'all',
+        label: `🎯 Select all repositories (${repositories.length} repositories)`,
+        hint: 'Scan all repositories in the organization'
+      },
+      ...repositories
+      .sort((a, b) => a.updated_at && b.updated_at ? new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime() : 0)
+      .map((repo) => ({
+        value: repo.name,
+        label: `📦 ${repo.name}`,
+        hint: `${repo.description || 'No description'} - Updated: ${repo.updated_at ? new Date(repo.updated_at).toLocaleDateString() : 'Unknown'}`
+      }))
+    ];
+
+    const selected = await clack.multiselect({
+      message: 'Select repositories to scan for code scanning alerts:',
+      options,
+      required: true
+    });
+
+    if (clack.isCancel(selected)) {
+      clack.cancel('Operation cancelled');
+      process.exit(0);
+    }
+
+    if (selected.includes('all')) {
+      return repositories;
+    }
+
+    return repositories.filter(repo => selected.includes(repo.name));
   }
 }

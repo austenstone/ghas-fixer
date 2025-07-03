@@ -2,6 +2,7 @@ import type { Endpoints } from '@octokit/types';
 import type { components } from '@octokit/openapi-types';
 
 export type CodeScanningAlert = components['schemas']['code-scanning-alert'];
+export type Repository = Endpoints['GET /orgs/{org}/repos']['response']['data'][0];
 export type ListOrgCodeScanningAlerts = Endpoints['GET /orgs/{org}/code-scanning/alerts'];
 export type ListRepoCodeScanningAlerts = Endpoints['GET /repos/{owner}/{repo}/code-scanning/alerts'];
 export type CreateCodeScanningAutoFix = Endpoints['POST /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/autofix'];
