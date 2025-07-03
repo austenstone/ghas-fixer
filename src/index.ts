@@ -25,7 +25,30 @@ class GitHubSecurityAutofixer {
     if (!token) {
       throw new Error('GITHUB_TOKEN environment variable is required');
     }
-    this.octokit = new Octokit({ auth: token, log: undefined });
+    this.octokit = new Octokit({ 
+      auth: token,
+      log: {
+        error: () => {
+          // clack.log.error(`GitHub API Error: ${message}`);
+        },
+        warn: () => {
+          // clack.log.warn(`GitHub API Warning: ${message}`);
+        },
+        info: () => {
+          // clack.log.info(`GitHub API Info: ${message}`);
+        },
+        debug: () => {
+        }
+      }
+     });
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof RequestError) {
+      return `Request Error(${error.status}) - ${error.message} (Status: ${error.status})`;
+    } else {
+      return `Error - ${error instanceof Error ? error.message : String(error)}`;
+    }
   }
 
   private getSecuritySeverityEmoji(securitySeverity?: "critical" | "high" | "medium" | "low" | null | undefined): string {
@@ -176,7 +199,7 @@ class GitHubSecurityAutofixer {
       spinner.stop(`Found ${alerts.length} open code scanning alerts`);
       return alerts;
     } catch (error) {
-      spinner.stop('Failed to fetch alerts');
+      spinner.stop(`Error fetching alerts: ${this.getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -220,13 +243,13 @@ class GitHubSecurityAutofixer {
     const alertsWithAutoFixes: CodeScanningAlert[] = [];
     for (const [, alert] of alerts.entries()) {
       const spinner = clack.spinner();
+      spinner.start(`#${alert.number}: Creating autofix ${alert.rule.name}`);
       try {
-        spinner.start(`#${alert.number}: Creating autofix ${alert.rule.name}`);
         await this.createAutofix(alert);
         spinner.stop(`#${alert.number}: Autofix created`);
         alertsWithAutoFixes.push(alert);
       } catch (error) {
-        spinner.stop(`#${alert.number}: Error - ${error instanceof Error ? error.message : String(error)}`);
+        spinner.stop(`Failed to create autofix for #${alert.number}: ${this.getErrorMessage(error)}`);
       }
     }
 
@@ -289,11 +312,7 @@ class GitHubSecurityAutofixer {
           ++attempts;
         } while (status.status === 'pending' && attempts < 60);
       } catch (error) {
-        if (error instanceof RequestError) {
-          result = `#${alert.number}: Request Error(${error.status}) - ${error.message} (Status: ${error.status})`;
-        } else {
-          result = `#${alert.number}: Error - ${error instanceof Error ? error.message : String(error)}`;
-        }
+        result = `Failed to commit autofix for #${alert.number}: ${this.getErrorMessage(error)}`;
       } finally {
         spinner.stop(`#${alert.number}: ${result}`);
       }
