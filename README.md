@@ -4,13 +4,30 @@ A powerful CLI tool that automatically fixes code scanning alerts in your GitHub
 
 After triggering autofix for all available code scanning alerts it will merge them all into a PR for you to review and merge. You could technically auto merge the PR if you wanted to.
 
+## Quick Start 🚀
+
+### As GitHub CLI Extension (Recommended)
+```bash
+# Install the extension
+gh extension install austenstone/ghas-fixer
+
+# Use it
+gh ghas-fixer
+```
+
+### As Standalone CLI
 ```bash
 npx ghas-fixer
 ```
 
-
 ## Installation 📦
 
+### GitHub CLI Extension
+```bash
+gh extension install austenstone/ghas-fixer
+```
+
+### NPM Package
 ```bash
 npm install -g ghas-fixer
 ```
@@ -47,23 +64,23 @@ For automation and CI/CD integration:
 
 ```bash
 # Fix all alerts in a specific repository
-ghas-fixer --org myorg --repo myrepo --yes
+gh-ghas-fixer ---org myorg --repo myrepo --yes
 
 # Fix alerts in multiple repositories
-ghas-fixer --org myorg --repos "repo1,repo2,repo3" --yes
+gh-ghas-fixer ---org myorg --repos "repo1,repo2,repo3" --yes
 
 # Fix only critical and high severity alerts
-ghas-fixer --org myorg --repo myrepo --severity "critical,high" --yes --create-pr
+gh-ghas-fixer ---org myorg --repo myrepo --severity "critical,high" --yes --create-pr
 
 # Preview changes without applying them
-ghas-fixer --org myorg --repo myrepo --dry-run
+gh-ghas-fixer ---org myorg --repo myrepo --dry-run
 ```
 
 ## Command Line Options 🛠️
 
 ```bash
 USAGE
-  ghas-fixer [OPTIONS]
+ gh-ghas-fixer[OPTIONS]
 
 OPTIONS
   -h, --help                 Show help message
@@ -98,53 +115,53 @@ OPTIONS
 ghas-fixer
 
 # Fix all alerts in a repository (headless)
-ghas-fixer -o myorg -r myrepo -y
+gh-ghas-fixer --o myorg -r myrepo -y
 ```
 
 ### Advanced Filtering
 
 ```bash
 # Fix only critical severity alerts
-ghas-fixer -o myorg -r myrepo -s critical -y
+gh-ghas-fixer --o myorg -r myrepo -s critical -y
 
 # Fix specific alerts by ID
-ghas-fixer -o myorg -r myrepo -a "1,2,3" -y
+gh-ghas-fixer --o myorg -r myrepo -a "1,2,3" -y
 
 # Fix alerts from specific tool
-ghas-fixer -o myorg -r myrepo --tool CodeQL -y
+gh-ghas-fixer --o myorg -r myrepo --tool CodeQL -y
 ```
 
 ### Multiple Repositories
 
 ```bash
 # Fix alerts in multiple repositories
-ghas-fixer -o myorg --repos "api,frontend,backend" -y
+gh-ghas-fixer --o myorg --repos "api,frontend,backend" -y
 
 # With custom branch name
-ghas-fixer -o myorg --repos "api,frontend" -b security-fixes -y
+gh-ghas-fixer --o myorg --repos "api,frontend" -b security-fixes -y
 ```
 
 ### Pull Request Management
 
 ```bash
 # Automatically create PR with custom title and body
-ghas-fixer -o myorg -r myrepo -y --create-pr --pr-title "Security fixes" --pr-body "Automated security fixes"
+gh-ghas-fixer --o myorg -r myrepo -y --create-pr --pr-title "Security fixes" --pr-body "Automated security fixes"
 
 # Skip PR creation
-ghas-fixer -o myorg -r myrepo -y --no-pr
+gh-ghas-fixer --o myorg -r myrepo -y --no-pr
 ```
 
 ### Dry Run and Debugging
 
 ```bash
 # Preview what would be fixed
-ghas-fixer -o myorg -r myrepo --dry-run
+gh-ghas-fixer --o myorg -r myrepo --dry-run
 
 # Verbose logging
-ghas-fixer -o myorg -r myrepo -y --verbose
+gh-ghas-fixer --o myorg -r myrepo -y --verbose
 
 # Quiet mode (errors only)
-ghas-fixer -o myorg -r myrepo -y --quiet
+gh-ghas-fixer --o myorg -r myrepo -y --quiet
 ```
 
 ## Environment Variables 🌍
@@ -196,7 +213,7 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
     steps:
-      - run: npx ghas-fixer -y -o ${ORG} -r ${REPOSITORY}
+      - run: npxgh-ghas-fixer-y -o ${ORG} -r ${REPOSITORY}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.event.repository.name }}

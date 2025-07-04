@@ -3,31 +3,6 @@ import 'dotenv/config';
 import { GitHubSecurityAutofixer } from './autofixer.js';
 import { RepositoryPrompts } from './utils/repository-prompts.js';
 import { CliParser } from './utils/cli-parser.js';
-import { createRequire } from 'module';
-import { readFileSync } from 'fs';
-
-export function getVersion(): string {
-  const require = createRequire(import.meta.url);
-  try {
-    const packageJsonPath = require.resolve('../package.json');
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-    return packageJson.version || '1.0.0';
-  } catch {
-    try {
-      const packageJsonPath = require.resolve('ghas-fixer/package.json');
-      const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-      return packageJson.version || '1.0.0';
-    } catch {
-      try {
-        const packageJsonPath = require.resolve('./package.json');
-        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-        return packageJson.version || '1.0.0';
-      } catch {
-        return '1.0.0';
-      }
-    }
-  }
-}
 
 async function main(): Promise<void> {
   try {
@@ -40,18 +15,18 @@ async function main(): Promise<void> {
     }
 
     if (options.version) {
-      console.log(`ghas-fixer v${getVersion()}`);
+      CliParser.showVersion();
       return;
     }
 
-    // Get token from options, environment, or prompt
-    let token = options.token || process.env.GITHUB_TOKEN;
+    // Get token from options, environment, or GitHub CLI
+    let token = options.token || process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
     if (!token && !options.yes) {
       token = await RepositoryPrompts.promptForToken();
     }
 
     if (!token) {
-      throw new Error('GitHub token is required. Use --token, set GITHUB_TOKEN environment variable, or run without --yes flag.');
+      throw new Error('GitHub token is required. Use --token, set GITHUB_TOKEN/GH_TOKEN environment variable, or run without --yes flag.');
     }
 
     const autofixer = new GitHubSecurityAutofixer(token, options);

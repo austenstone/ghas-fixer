@@ -12,7 +12,7 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
     steps:
-      - run: npx ghas-fixer -y -o ${ORG} -r ${REPOSITORY}
+      - run: npxgh-ghas-fixer-y -o ${ORG} -r ${REPOSITORY}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.event.repository.name }}

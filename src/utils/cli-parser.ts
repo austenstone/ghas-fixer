@@ -27,7 +27,14 @@ export class CliParser {
 GitHub Advanced Security Autofix CLI
 
 USAGE
-  ghas-fixer [OPTIONS]
+ gh-ghas-fixer[OPTIONS]
+  ghgh-ghas-fixer[OPTIONS]
+
+DESCRIPTION
+  Automatically fixes code scanning alerts in GitHub repositories using 
+  GitHub Advanced Security's autofix feature. After triggering autofix 
+  for all available code scanning alerts, it will merge them all into 
+  a PR for you to review and merge.
 
 OPTIONS
   -h, --help                 Show this help message
@@ -57,19 +64,19 @@ EXAMPLES
   ghas-fixer
 
   # Fix all alerts in a specific repository
-  ghas-fixer -o myorg -r myrepo -y
+ gh-ghas-fixer-o myorg -r myrepo -y
 
   # Fix specific alerts in multiple repositories
-  ghas-fixer -o myorg --repos "repo1,repo2,repo3" -a "1,2,3"
+ gh-ghas-fixer-o myorg --repos "repo1,repo2,repo3" -a "1,2,3"
 
   # Fix only critical and high severity alerts
-  ghas-fixer -o myorg -r myrepo -s "critical,high" --create-pr
+ gh-ghas-fixer-o myorg -r myrepo -s "critical,high" --create-pr
 
   # Dry run to see what would be fixed
-  ghas-fixer -o myorg -r myrepo --dry-run
+ gh-ghas-fixer-o myorg -r myrepo --dry-run
 
   # Use specific token and branch name
-  ghas-fixer -t ghp_xxx -o myorg -r myrepo -b security-fixes
+ gh-ghas-fixer-t ghp_xxx -o myorg -r myrepo -b security-fixes
 
 ENVIRONMENT VARIABLES
   GITHUB_TOKEN    GitHub personal access token
@@ -228,6 +235,6 @@ ENVIRONMENT VARIABLES
   static showVersion(): void {
     // Import package.json to get version
     const packageJson = process.env.npm_package_version || '1.0.0';
-    console.log(`ghas-fixer v${packageJson}`);
+    console.log(`gh-ghas-fixer v${packageJson}`);
   }
 }
