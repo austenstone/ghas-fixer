@@ -1,6 +1,6 @@
 name: Autofix Code Scanning Alerts
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
   security-events: write
 on:
