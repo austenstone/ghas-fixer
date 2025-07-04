@@ -6,28 +6,6 @@ A powerful CLI tool that automatically fixes code scanning alerts in your GitHub
 npx ghas-fixer
 ```
 
-## Features ✨
-
-- 🔍 Automatically fetches code scanning alerts f### v1.2.0 (Current)
-- ✨ Added headless mode support with `--yes` flag
-- 🎯 Added advanced filtering by severity, state, and tool
-- 🔀 Added batch processing for multiple repositories
-- 🏃 Added dry-run mode with `--dry-run` flag
-- 🤖 Added automatic PR creation options
-- 🔧 Added comprehensive CLI argument support
-- 📝 Added configuration file support
-- 🌍 Added environment variable support
-- 🔄 Enhanced CI/CD integration capabilities repositories
-- 🤖 Uses GitHub's built-in autofix capabilities to generate fixes
-- 📋 Interactive prompts for selecting alerts to fix
-- 🌿 Creates a new branch with all the fixes applied
-- 🔄 Supports both single repositories and organization-wide scanning
-- 🏢 Organization mode: Select multiple repositories to scan at once
-- 🛡️ Handles errors gracefully with detailed feedback
-- 🤖 **Headless mode** for automation and CI/CD integration
-- 🎯 **Advanced filtering** by severity, state, and tool
-- 🔀 **Batch processing** for multiple repositories
-- 🏃 **Dry-run mode** to preview changes before applying
 
 ## Installation 📦
 
