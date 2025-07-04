@@ -1,6 +1,6 @@
 {
   "name": "ghas-fixer",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "GitHub Advanced Security autofix CLI tool for code scanning alerts",
   "type": "module",
   "main": "dist/index.js",

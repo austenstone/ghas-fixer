@@ -3,19 +3,29 @@ import 'dotenv/config';
 import { GitHubSecurityAutofixer } from './autofixer.js';
 import { RepositoryPrompts } from './utils/repository-prompts.js';
 import { CliParser } from './utils/cli-parser.js';
+import { createRequire } from 'module';
 import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export function getVersion(): string {
+  const require = createRequire(import.meta.url);
   try {
-    const packageJsonPath = join(__dirname, '..', 'package.json');
+    const packageJsonPath = require.resolve('../package.json');
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
     return packageJson.version || '1.0.0';
   } catch {
-    return '1.0.0';
+    try {
+      const packageJsonPath = require.resolve('ghas-fixer/package.json');
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+      return packageJson.version || '1.0.0';
+    } catch {
+      try {
+        const packageJsonPath = require.resolve('./package.json');
+        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+        return packageJson.version || '1.0.0';
+      } catch {
+        return '1.0.0';
+      }
+    }
   }
 }
 
@@ -56,7 +66,10 @@ async function main(): Promise<void> {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+import { fileURLToPath } from 'url';
+
+// Check if this module is being run directly
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
     console.error('Fatal error:', error);
     process.exit(1);
