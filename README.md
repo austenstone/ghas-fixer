@@ -260,10 +260,10 @@ If you encounter any issues or have questions, please [open an issue](https://gi
 - � Added batch processing for multiple repositories
 - 🏃 Added dry-run mode with `--dry-run` flag
 - 🤖 Added automatic PR creation options
-- � Added comprehensive CLI argument support
+- 🧠 Added comprehensive CLI argument support
 - 📝 Added configuration file support
 - 🌍 Added environment variable support
-- � Enhanced CI/CD integration capabilities
+- 🚗 Enhanced CI/CD integration capabilities
 
 ### v1.1.0
 - 🏢 Added organization mode support
