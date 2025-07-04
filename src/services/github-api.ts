@@ -45,7 +45,15 @@ export class GitHubApiService {
     this.spinner = spinner;
   }
 
-  async fetchCodeScanningAlerts(org: string, repo?: string): Promise<CodeScanningAlert[]> {
+  async fetchCodeScanningAlerts(
+    org: string, 
+    repo?: string,
+    filters?: {
+      state?: string;
+      severity?: string[];
+      tool?: string;
+    }
+  ): Promise<CodeScanningAlert[]> {
     const alerts: CodeScanningAlert[] = [];
 
     if (repo) {
@@ -53,8 +61,8 @@ export class GitHubApiService {
       const params: ListRepoCodeScanningAlerts['parameters'] = {
         owner: org,
         repo: repo,
-        state: 'open',
-        tool_name: 'CodeQL',
+        state: (filters?.state as 'open' | 'dismissed' | 'fixed') || 'open',
+        tool_name: filters?.tool || 'CodeQL',
       };
 
       for await (const response of this.octokit.paginate.iterator(
@@ -68,8 +76,8 @@ export class GitHubApiService {
       // Fetch alerts for organization
       const params: ListOrgCodeScanningAlerts['parameters'] = {
         org: org,
-        state: 'open',
-        tool_name: 'CodeQL',
+        state: (filters?.state as 'open' | 'dismissed' | 'fixed') || 'open',
+        tool_name: filters?.tool || 'CodeQL',
       };
 
       for await (const response of this.octokit.paginate.iterator(
@@ -81,12 +89,20 @@ export class GitHubApiService {
       }
     }
 
-    alerts.sort((a, b) => {
+    // Filter by severity if specified
+    let filteredAlerts = alerts;
+    if (filters?.severity && filters.severity.length > 0) {
+      filteredAlerts = alerts.filter(alert => 
+        filters.severity!.includes(alert.rule.security_severity_level || 'low')
+      );
+    }
+
+    filteredAlerts.sort((a, b) => {
       const severities = ['low', 'medium', 'high', 'critical'];
       return severities.indexOf(b.rule.security_severity_level || 'low') - severities.indexOf(a.rule.security_severity_level || 'low');
     });
 
-    return alerts;
+    return filteredAlerts;
   }
 
   async getAutofixStatus(org: string, repo: string | undefined, alert: CodeScanningAlert): Promise<GetStatusCodeScanningAutoFix['response']['data']> {

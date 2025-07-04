@@ -189,7 +189,7 @@ export class RepositoryPrompts {
     return !clack.isCancel(confirmed) && confirmed;
   }
 
-  static async promptForPullRequestDetails(successfullyFixedAlerts: CodeScanningAlert[]): Promise<{ title: string; body: string }> {
+  static async promptForPullRequestDetails(successfullyFixedAlerts: CodeScanningAlert[]): Promise<string> {
     const count = successfullyFixedAlerts.length;
     const title = await clack.text({
       message: 'Enter PR title:',
@@ -202,27 +202,7 @@ export class RepositoryPrompts {
       process.exit(0);
     }
 
-    const body = `This PR contains autofixes for ${count} code scanning alert${count > 1 ? 's' : ''} from GitHub Advanced Security.
-
-The following alerts were fixed:
-
-| Alert # | Rule ID | Description | Severity | Location |
-|---------|---------|-------------|----------|----------|
-${successfullyFixedAlerts.map(alert => {
-  const path = alert.most_recent_instance?.location?.path || 'N/A';
-  const line = alert.most_recent_instance?.location?.start_line || 'N/A';
-  const location = path !== 'N/A' && line !== 'N/A' ? `${path}:${line}` : path;
-  return `| [#${alert.number}](${alert.html_url}) | \`${alert.rule.id}\` | ${alert.rule.description || alert.rule.name || alert.rule.id} | ${alert.rule.security_severity_level} | ${location} |`;
-}).join('\n')}
-
-Please review the changes before merging.`;
-
-    if (clack.isCancel(body)) {
-      clack.cancel('Operation cancelled');
-      process.exit(0);
-    }
-
-    return { title, body };
+    return title;
   }
 
   static async promptForRepositorySelection(repositories: Repository[]): Promise<Repository[]> {
