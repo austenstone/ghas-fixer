@@ -2,6 +2,10 @@
 
 A powerful CLI tool that automatically fixes code scanning alerts in your GitHub repositories using GitHub Advanced Security's autofix feature.
 
+```bash
+npx ghas-fixer
+```
+
 ## Features ✨
 
 - 🔍 Automatically fetches code scanning alerts f### v1.2.0 (Current)
@@ -24,10 +28,6 @@ A powerful CLI tool that automatically fixes code scanning alerts in your GitHub
 - 🎯 **Advanced filtering** by severity, state, and tool
 - 🔀 **Batch processing** for multiple repositories
 - 🏃 **Dry-run mode** to preview changes before applying
-
-```bash
-npx ghas-fixer // Get started fast
-```
 
 ## Installation 📦
 
