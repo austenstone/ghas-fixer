@@ -82,12 +82,25 @@ var addSorting = (function() {
             data = {},
             i,
             val;
+
+        // Utility function to escape HTML special characters
+        function escapeHTML(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         for (i = 0; i < tableCols.length; i += 1) {
             colNode = tableCols[i];
             col = cols[i];
             val = colNode.getAttribute('data-value');
             if (col.type === 'number') {
                 val = Number(val);
+            } else if (val) {
+                val = escapeHTML(val);
             }
             data[col.key] = val;
         }
