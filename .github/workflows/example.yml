@@ -8,8 +8,8 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
     steps:
-      - run: npx ghas-fixer -y -o ${GITHUB_ORG} -r ${GITHUB_REPOSITORY}
+      - run: npx ghas-fixer -y -o ${ORG} -r ${REPOSITORY}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.event.repository.name }}
-          GITHUB_ORG: ${{ github.repository_owner }}
+          REPOSITORY: ${{ github.event.repository.name }}
+          ORG: ${{ github.repository_owner }}
