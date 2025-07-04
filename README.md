@@ -180,46 +180,21 @@ Use with `--config config.json`
 Perfect for automated security workflows:
 
 ```yaml
-# GitHub Actions example
-name: Auto-fix Security Alerts
+name: Autofix Code Scanning Alerts
 on:
   schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM
+    - cron: '0 0 * * *'  # Runs daily at midnight
+  workflow_dispatch:
 
 jobs:
   autofix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-      - run: npm install -g ghas-fixer
-      - run: ghas-fixer --org ${{ github.repository_owner }} --repos "repo1,repo2" --yes --create-pr
+      - run: npx ghas-fixer -y -o ${ORG} -r ${REPOSITORY}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
-## Development 🔨
-
-### Build
-```bash
-npm run build
-```
-
-### Test
-```bash
-npm test
-```
-
-### Run Locally
-```bash
-npm start
-```
-
-### Development with Watch Mode
-```bash
-npm run dev
+          REPOSITORY: ${{ github.event.repository.name }}
+          ORG: ${{ github.repository_owner }}
 ```
 
 ## License 📄
