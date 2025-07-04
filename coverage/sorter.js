@@ -88,6 +88,11 @@ var addSorting = (function() {
             val = colNode.getAttribute('data-value');
             if (col.type === 'number') {
                 val = Number(val);
+                if (isNaN(val)) {
+                    val = 0; // Default to 0 if the value is not a valid number
+                }
+            } else {
+                val = val.replace(/[^a-zA-Z0-9\s]/g, ''); // Remove potentially dangerous characters
             }
             data[col.key] = val;
         }
