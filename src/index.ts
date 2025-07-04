@@ -66,10 +66,7 @@ async function main(): Promise<void> {
   }
 }
 
-import { fileURLToPath } from 'url';
-
-// Check if this module is being run directly
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1]) {
   main().catch((error) => {
     console.error('Fatal error:', error);
     process.exit(1);
