@@ -181,6 +181,10 @@ Perfect for automated security workflows:
 
 ```yaml
 name: Autofix Code Scanning Alerts
+permissions:
+  contents: write
+  pull-requests: write
+  security-events: write
 on:
   schedule:
     - cron: '0 0 * * *'  # Runs daily at midnight
@@ -195,6 +199,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.event.repository.name }}
           ORG: ${{ github.repository_owner }}
+
 ```
 
 ## License 📄
