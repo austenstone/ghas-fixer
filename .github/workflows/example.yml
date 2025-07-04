@@ -1,3 +1,4 @@
+name: Autofix Code Scanning Alerts
 on:
   schedule:
     - cron: '0 0 * * *'  # Runs daily at midnight
@@ -7,7 +8,7 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
     steps:
-      - run: npx ghas-secret-fixer -y -o ${GITHUB_ORG} -r ${GITHUB_REPOSITORY}
+      - run: npx ghas-fixer -y -o ${GITHUB_ORG} -r ${GITHUB_REPOSITORY}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.event.repository.name }}

@@ -30,7 +30,7 @@ async function main(): Promise<void> {
     }
 
     if (options.version) {
-      console.log(`ghas-secret-fixer v${getVersion()}`);
+      console.log(`ghas-fixer v${getVersion()}`);
       return;
     }
 

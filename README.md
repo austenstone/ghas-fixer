@@ -25,10 +25,14 @@ A powerful CLI tool that automatically fixes code scanning alerts in your GitHub
 - 🔀 **Batch processing** for multiple repositories
 - 🏃 **Dry-run mode** to preview changes before applying
 
+```bash
+npx ghas-fixer // Get started fast
+```
+
 ## Installation 📦
 
 ```bash
-npm install -g ghas-secret-fixer
+npm install -g ghas-fixer
 ```
 
 ## Usage 🚀
@@ -41,13 +45,13 @@ npm install -g ghas-secret-fixer
 
 2. Set your token as an environment variable:
    ```bash
-   export GITHUB_TOKEN=your_token_here
+   export GITHUB_TOKEN=ghp_your_token_here
    ```
 
 ### Interactive Mode
 
 ```bash
-ghas-secret-fixer
+ghas-fixer
 ```
 
 The tool will guide you through:
@@ -63,23 +67,23 @@ For automation and CI/CD integration:
 
 ```bash
 # Fix all alerts in a specific repository
-ghas-secret-fixer --org myorg --repo myrepo --yes
+ghas-fixer --org myorg --repo myrepo --yes
 
 # Fix alerts in multiple repositories
-ghas-secret-fixer --org myorg --repos "repo1,repo2,repo3" --yes
+ghas-fixer --org myorg --repos "repo1,repo2,repo3" --yes
 
 # Fix only critical and high severity alerts
-ghas-secret-fixer --org myorg --repo myrepo --severity "critical,high" --yes --create-pr
+ghas-fixer --org myorg --repo myrepo --severity "critical,high" --yes --create-pr
 
 # Preview changes without applying them
-ghas-secret-fixer --org myorg --repo myrepo --dry-run
+ghas-fixer --org myorg --repo myrepo --dry-run
 ```
 
 ## Command Line Options 🛠️
 
 ```bash
 USAGE
-  ghas-secret-fixer [OPTIONS]
+  ghas-fixer [OPTIONS]
 
 OPTIONS
   -h, --help                 Show help message
@@ -111,56 +115,56 @@ OPTIONS
 
 ```bash
 # Interactive mode
-ghas-secret-fixer
+ghas-fixer
 
 # Fix all alerts in a repository (headless)
-ghas-secret-fixer -o myorg -r myrepo -y
+ghas-fixer -o myorg -r myrepo -y
 ```
 
 ### Advanced Filtering
 
 ```bash
 # Fix only critical severity alerts
-ghas-secret-fixer -o myorg -r myrepo -s critical -y
+ghas-fixer -o myorg -r myrepo -s critical -y
 
 # Fix specific alerts by ID
-ghas-secret-fixer -o myorg -r myrepo -a "1,2,3" -y
+ghas-fixer -o myorg -r myrepo -a "1,2,3" -y
 
 # Fix alerts from specific tool
-ghas-secret-fixer -o myorg -r myrepo --tool CodeQL -y
+ghas-fixer -o myorg -r myrepo --tool CodeQL -y
 ```
 
 ### Multiple Repositories
 
 ```bash
 # Fix alerts in multiple repositories
-ghas-secret-fixer -o myorg --repos "api,frontend,backend" -y
+ghas-fixer -o myorg --repos "api,frontend,backend" -y
 
 # With custom branch name
-ghas-secret-fixer -o myorg --repos "api,frontend" -b security-fixes -y
+ghas-fixer -o myorg --repos "api,frontend" -b security-fixes -y
 ```
 
 ### Pull Request Management
 
 ```bash
 # Automatically create PR with custom title and body
-ghas-secret-fixer -o myorg -r myrepo -y --create-pr --pr-title "Security fixes" --pr-body "Automated security fixes"
+ghas-fixer -o myorg -r myrepo -y --create-pr --pr-title "Security fixes" --pr-body "Automated security fixes"
 
 # Skip PR creation
-ghas-secret-fixer -o myorg -r myrepo -y --no-pr
+ghas-fixer -o myorg -r myrepo -y --no-pr
 ```
 
 ### Dry Run and Debugging
 
 ```bash
 # Preview what would be fixed
-ghas-secret-fixer -o myorg -r myrepo --dry-run
+ghas-fixer -o myorg -r myrepo --dry-run
 
 # Verbose logging
-ghas-secret-fixer -o myorg -r myrepo -y --verbose
+ghas-fixer -o myorg -r myrepo -y --verbose
 
 # Quiet mode (errors only)
-ghas-secret-fixer -o myorg -r myrepo -y --quiet
+ghas-fixer -o myorg -r myrepo -y --quiet
 ```
 
 ## Environment Variables 🌍
@@ -212,8 +216,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
-      - run: npm install -g ghas-secret-fixer
-      - run: ghas-secret-fixer --org ${{ github.repository_owner }} --repos "repo1,repo2" --yes --create-pr
+      - run: npm install -g ghas-fixer
+      - run: ghas-fixer --org ${{ github.repository_owner }} --repos "repo1,repo2" --yes --create-pr
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -254,7 +258,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support 🆘
 
-If you encounter any issues or have questions, please [open an issue](https://github.com/austenstone/ghas-secret-fixer/issues) on GitHub.
+If you encounter any issues or have questions, please [open an issue](https://github.com/austenstone/ghas-fixer/issues) on GitHub.
 
 ## Changelog 📝
 

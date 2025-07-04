@@ -27,7 +27,7 @@ export class CliParser {
 GitHub Advanced Security Autofix CLI
 
 USAGE
-  ghas-secret-fixer [OPTIONS]
+  ghas-fixer [OPTIONS]
 
 OPTIONS
   -h, --help                 Show this help message
@@ -54,22 +54,22 @@ OPTIONS
 
 EXAMPLES
   # Interactive mode
-  ghas-secret-fixer
+  ghas-fixer
 
   # Fix all alerts in a specific repository
-  ghas-secret-fixer -o myorg -r myrepo -y
+  ghas-fixer -o myorg -r myrepo -y
 
   # Fix specific alerts in multiple repositories
-  ghas-secret-fixer -o myorg --repos "repo1,repo2,repo3" -a "1,2,3"
+  ghas-fixer -o myorg --repos "repo1,repo2,repo3" -a "1,2,3"
 
   # Fix only critical and high severity alerts
-  ghas-secret-fixer -o myorg -r myrepo -s "critical,high" --create-pr
+  ghas-fixer -o myorg -r myrepo -s "critical,high" --create-pr
 
   # Dry run to see what would be fixed
-  ghas-secret-fixer -o myorg -r myrepo --dry-run
+  ghas-fixer -o myorg -r myrepo --dry-run
 
   # Use specific token and branch name
-  ghas-secret-fixer -t ghp_xxx -o myorg -r myrepo -b security-fixes
+  ghas-fixer -t ghp_xxx -o myorg -r myrepo -b security-fixes
 
 ENVIRONMENT VARIABLES
   GITHUB_TOKEN    GitHub personal access token
@@ -228,6 +228,6 @@ ENVIRONMENT VARIABLES
   static showVersion(): void {
     // Import package.json to get version
     const packageJson = process.env.npm_package_version || '1.0.0';
-    console.log(`ghas-secret-fixer v${packageJson}`);
+    console.log(`ghas-fixer v${packageJson}`);
   }
 }

@@ -384,7 +384,7 @@ ${successfullyFixedAlerts.map(alert => `- ${alert.html_url}`).join('\n')}
 
 _Suggested fixes powered by Copilot Autofix. Review carefully before merging._
 
-Automated using [austenstone/ghas-secret-fixer](https://github.com/austenstone/ghas-secret-fixer)`;
+Automated using [austenstone/ghas-fixer](https://github.com/austenstone/ghas-fixer)`;
 
       if (!title || !body) {
         if (!this.options.yes) {

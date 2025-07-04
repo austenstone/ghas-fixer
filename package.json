@@ -1,12 +1,12 @@
 {
-  "name": "ghas-secret-fixer",
-  "version": "1.3.0",
+  "name": "ghas-fixer",
+  "version": "1.0.0",
   "description": "GitHub Advanced Security autofix CLI tool for code scanning alerts",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "ghas-secret-fixer": "dist/index.js"
+    "ghas-fixer": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -31,7 +31,7 @@
   "readme": "README.md",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/austenstone/ghas-secret-fixer.git"
+    "url": "git+https://github.com/austenstone/ghas-fixer.git"
   },
   "license": "MIT",
   "files": [
