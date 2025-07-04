@@ -13,7 +13,7 @@ updates:
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
     schedule:
-      interval: "daily
+      interval: "daily"
     directory: "/"
     reviewers:
       - "austenstone"
