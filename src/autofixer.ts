@@ -322,6 +322,7 @@ export class GitHubSecurityAutofixer {
           try {
             commit = await this.api.commitAutofix(this.org, repo, alert);
           } catch (error) {
+            console.log(error);
             this.log(`⚠️ Failed to commit autofix: ${ErrorHandler.getMessage(error)}`);
             throw error;
           }
