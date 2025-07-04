@@ -23,7 +23,7 @@ jobs:
     
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
+        node-version: [20.x, 22.x, 24.x]
     
     steps:
       - name: Checkout code
@@ -43,6 +43,10 @@ jobs:
       
       - name: Run tests
         run: npm test
+      
+      - name: Run tests with coverage
+        if: matrix.node-version == '20.x'
+        run: npm run test:coverage
       
       - name: Build project
         run: npm run build
