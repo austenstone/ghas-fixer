@@ -2,6 +2,8 @@ version: 2
 updates:
   # Enable version updates for npm
   - package-ecosystem: "npm"
+    schedule:
+      interval: "daily"
     directory: "/"
     reviewers:
       - "austenstone"
@@ -10,6 +12,8 @@ updates:
     
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
+    schedule:
+      interval: "daily
     directory: "/"
     reviewers:
       - "austenstone"
