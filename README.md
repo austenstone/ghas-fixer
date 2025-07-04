@@ -39,10 +39,10 @@ npm install -g ghas-fixer
 
 ### Prerequisites
 
+1. Node
 1. You need a GitHub Personal Access Token with the following scopes:
    - `repo` (for repository access)
    - `security_events` (for reading code scanning alerts)
-
 2. Set your token as an environment variable:
    ```bash
    export GITHUB_TOKEN=ghp_your_token_here
