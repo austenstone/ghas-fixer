@@ -6,8 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "gh-ghas-fixer": "dist/index.js",
-    "gh-ghas-fixer": "gh-ghas-fixer"
+    "gh-ghas-fixer": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
