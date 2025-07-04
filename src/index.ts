@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'dotenv/config';
 import { GitHubSecurityAutofixer } from './autofixer.js';
-import { RepositoryPrompts } from './prompts/repository-prompts.js';
+import { RepositoryPrompts } from './utils/repository-prompts.js';
 import { CliParser } from './utils/cli-parser.js';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';

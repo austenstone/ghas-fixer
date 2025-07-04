@@ -1,6 +1,6 @@
 import * as clack from '@clack/prompts';
 import type { CodeScanningAlert, Repository } from '../types.js';
-import { ErrorHandler } from '../utils/error-handler.js';
+import { ErrorHandler } from './error-handler.js';
 
 export class RepositoryPrompts {
   static async promptForRepository(args: string[]): Promise<{ org: string; repo: string }> {

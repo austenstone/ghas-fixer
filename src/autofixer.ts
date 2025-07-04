@@ -1,7 +1,7 @@
 import * as clack from '@clack/prompts';
 import type { CodeScanningAlert, CommitCodeScanningAutoFix } from './types.js';
 import { GitHubApiService } from './services/github-api.js';
-import { RepositoryPrompts } from './prompts/repository-prompts.js';
+import { RepositoryPrompts } from './utils/repository-prompts.js';
 import { ErrorHandler } from './utils/error-handler.js';
 import type { CliOptions } from './utils/cli-parser.js';
 
