@@ -2,6 +2,8 @@
 
 A powerful CLI tool that automatically fixes code scanning alerts in your GitHub repositories using GitHub Advanced Security's autofix feature.
 
+After triggering autofix for all available code scanning alerts it will merge them all into a PR for you to review and merge. You could technically auto merge the PR if you wanted to.
+
 ```bash
 npx ghas-fixer
 ```
